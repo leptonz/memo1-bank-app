@@ -1,7 +1,9 @@
 package com.aninfo;
 
 import com.aninfo.model.Account;
+import com.aninfo.model.Transaction;
 import com.aninfo.service.AccountService;
+import com.aninfo.service.TransactionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -26,6 +28,9 @@ public class Memo1BankApp {
 
 	@Autowired
 	private AccountService accountService;
+
+	@Autowired
+	private TransactionService transactionService;
 
 	public static void main(String[] args) {
 		SpringApplication.run(Memo1BankApp.class, args);
@@ -75,12 +80,20 @@ public class Memo1BankApp {
 		return accountService.deposit(cbu, sum);
 	}
 
-	@Bean
-	public Docket apiDocket() {
-		return new Docket(DocumentationType.SWAGGER_2)
-			.select()
-			.apis(RequestHandlerSelectors.any())
-			.paths(PathSelectors.any())
-			.build();
+	@PutMapping("/transactions")
+	public Transaction createTransaction(@PathVariable Long cbu, @RequestParam Double sum, @RequestParam String type) {
+		if (type.equals("deposito")) {
+			return (transactionService.hacerDeposito(cbu, sum));
+		}
+		return (transactionService.hacerRetiro(cbu, sum));
 	}
-}
+
+		@Bean
+		public Docket apiDocket () {
+			return new Docket(DocumentationType.SWAGGER_2)
+					.select()
+					.apis(RequestHandlerSelectors.any())
+					.paths(PathSelectors.any())
+					.build();
+		}
+	}
