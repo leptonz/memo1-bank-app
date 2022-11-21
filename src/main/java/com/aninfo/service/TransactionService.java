@@ -1,16 +1,13 @@
 package com.aninfo.service;
 
-import com.aninfo.exceptions.DepositNegativeSumException;
-import com.aninfo.exceptions.InsufficientFundsException;
+import com.aninfo.exceptions.NoSeEncuentraLaTransaccionException;
 import com.aninfo.model.Account;
 import com.aninfo.model.Transaction;
-import com.aninfo.repository.AccountRepository;
 import com.aninfo.repository.TransactionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.transaction.Transactional;
-import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -22,42 +19,55 @@ public class TransactionService {
     @Autowired
     private TransactionRepository transactionRepository;
 
-    public Transaction hacerDeposito(Long cbu, Double monto) {
+    public Transaction hacerDeposito(Transaction transaction) {
 
-        Transaction nuevoDeposito = new Transaction();
-        Account cuentaDeLaTransaccion = accountService.deposit(cbu, monto);
+        Account cuentaDeLaTransaccion = accountService.deposit(transaction.getCbuCuenta(), transaction.getMonto());
 
-        nuevoDeposito.setTipoDeTransaccion("deposito");
-        nuevoDeposito.setMonto(monto);
-        nuevoDeposito.setCuenta(cuentaDeLaTransaccion);
-
-        return transactionRepository.save(nuevoDeposito);
+        return transactionRepository.save(transaction);
     }
 
-    public Transaction hacerRetiro(long cbu, double monto){
+    public Transaction hacerRetiro(Transaction transaction){
 
-        Transaction nuevoRetiro = new Transaction();
-        Account cuentaDeLaTransaccion =  accountService.withdraw(cbu, monto);
 
-        nuevoRetiro.setTipoDeTransaccion("retiro");
-        nuevoRetiro.setMonto(monto);
-        nuevoRetiro.setCuenta(cuentaDeLaTransaccion);
+        Account cuentaDeLaTransaccion = accountService.withdraw(transaction.getCbuCuenta(), transaction.getMonto());
 
-        return transactionRepository.save(nuevoRetiro);
+        return transactionRepository.save(transaction);
+    }
+
+    public List<Transaction> obtenerTransaccionesDeCuenta(Long cbu){
+
+        return(transactionRepository.findAllByCbuCuenta(cbu));
+    }
+
+    public Transaction obtenerTransaccionPorSuNumero(Long numeroDeTransaccion){
+        Optional<Transaction> transaccionBuscada = transactionRepository.findById(numeroDeTransaccion);
+        return transaccionBuscada.orElse(null);
+    }
+
+    public void borrarTransaccion(Long numeroDeTransaccion){
+        Transaction transaccionABorrar;
+        String tipoDeTransaccion;
+
+        if(!transactionRepository.existsById(numeroDeTransaccion)){
+            throw new NoSeEncuentraLaTransaccionException("La transaccion que quiere borrar no existe");
+        }
+
+        transaccionABorrar = (transactionRepository.findById(numeroDeTransaccion)).get();
+        tipoDeTransaccion = transaccionABorrar.getTipoDeTransaccion();
+//
+
+        if(tipoDeTransaccion.equals("deposito")){
+            accountService.withdraw(transaccionABorrar.getCbuCuenta(), transaccionABorrar.getMonto());
+        }
+
+        if(tipoDeTransaccion.equals("retiro")){
+            accountService.deposit(transaccionABorrar.getCbuCuenta(), transaccionABorrar.getMonto());
+        }
+
+        transactionRepository.deleteById(numeroDeTransaccion);
+        return;
     }
 
 
-
-    public Collection<Transaction> getTransactions() {
-        return transactionRepository.findAll();
-    }
-
-    public Optional<Transaction> findById(Long numeroDeTransaccion) {
-        return transactionRepository.findById(numeroDeTransaccion);
-    }
-
-    public void deleteById(Long cbu) {
-        transactionRepository.deleteById(cbu);
-    }
 
 }

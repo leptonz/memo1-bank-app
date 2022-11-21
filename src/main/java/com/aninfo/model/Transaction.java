@@ -1,3 +1,4 @@
+
 package com.aninfo.model;
 
 import javax.persistence.*;
@@ -9,13 +10,19 @@ public class Transaction {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long numeroDeTransacccion;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    private Account cuenta;
-
     private Double monto;
 
     private String tipoDeTransaccion;
 
+    private Long cbuCuenta;
+
+    public Long getCbuCuenta() {
+        return cbuCuenta;
+    }
+
+    public void setCbuCuenta(Long cbuCuenta) {
+        this.cbuCuenta = cbuCuenta;
+    }
 
     public Long getNumeroDeTransacccion() {
         return numeroDeTransacccion;
@@ -39,16 +46,5 @@ public class Transaction {
 
     public void setTipoDeTransaccion(String tipoDeTransaccion) {
         this.tipoDeTransaccion = tipoDeTransaccion;
-    }
-
-    public Transaction(){
-    }
-
-    public Account getCuenta() {
-        return cuenta;
-    }
-
-    public void setCuenta(Account cuenta) {
-        this.cuenta = cuenta;
     }
 }

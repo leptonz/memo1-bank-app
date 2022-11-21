@@ -8,22 +8,26 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collection;
 import java.util.Optional;
+import java.util.List;
 import springfox.documentation.builders.PathSelectors;
 import springfox.documentation.builders.RequestHandlerSelectors;
 import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spring.web.plugins.Docket;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
-
+@EnableJpaRepositories
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 @RestController
 @SpringBootApplication
 @EnableSwagger2
+
+
 public class Memo1BankApp {
 
 	@Autowired
@@ -70,24 +74,26 @@ public class Memo1BankApp {
 		accountService.deleteById(cbu);
 	}
 
-	@PutMapping("/accounts/{cbu}/withdraw")
-	public Account withdraw(@PathVariable Long cbu, @RequestParam Double sum) {
-		return accountService.withdraw(cbu, sum);
-	}
-
-	@PutMapping("/accounts/{cbu}/deposit")
-	public Account deposit(@PathVariable Long cbu, @RequestParam Double sum) {
-		return accountService.deposit(cbu, sum);
-	}
-
-	@PutMapping("/transactions")
-	public Transaction createTransaction(@PathVariable Long cbu, @RequestParam Double sum, @RequestParam String type) {
-		if (type.equals("deposito")) {
-			return (transactionService.hacerDeposito(cbu, sum));
+	@PostMapping("/transactions")
+	public Transaction createTransaction(@RequestBody Transaction transaction) {
+		if (transaction.getTipoDeTransaccion().equalsIgnoreCase("deposito")) {
+			return (transactionService.hacerDeposito(transaction));
 		}
-		return (transactionService.hacerRetiro(cbu, sum));
+		return (transactionService.hacerRetiro(transaction));
 	}
-
+	@GetMapping("/transactions/search/{cbu}")
+	public List<Transaction> buscarTransaccionesPorCBU(@PathVariable Long cbu) {
+		return transactionService.obtenerTransaccionesDeCuenta(cbu);
+	}
+	@GetMapping("/transactions/{numeroDeTransaccion}")
+	public Transaction buscarTransaccionPorNumeroDeTransaccion(@PathVariable Long numeroDeTransaccion) {
+		return transactionService.obtenerTransaccionPorSuNumero(numeroDeTransaccion);
+	}
+	@DeleteMapping("/transactions/{numeroDeTransaccion}")
+	public void borrarTransaccionPorNumeroDeTransaccion(@PathVariable Long numeroDeTransaccion) {
+		transactionService.borrarTransaccion(numeroDeTransaccion);
+		return;
+	}
 		@Bean
 		public Docket apiDocket () {
 			return new Docket(DocumentationType.SWAGGER_2)
